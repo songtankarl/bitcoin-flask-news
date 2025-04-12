@@ -26,7 +26,7 @@ def fetch_bitcoin_news():
             'pageSize': 100,
             'page': page,
             'apiKey': API_KEY,
-            'domains': 'coindesk.com,cointelegraph.com,cnn.com'
+            # 'domains': 'coindesk.com,cointelegraph.com,cnn.com'
             # 'domains': 'theguru.co.kr,businesspost.co.kr,news.nate.com,home.sarangbang.com,mk.co.kr,m.joseilbo.com,g-enews.com,economist.co.kr,blockmedia.co.kr,digitaltoday.co.kr,bloomingbit.io'
         }
         response = requests.get(NEWS_ENDPOINT, params=params)
