@@ -9,9 +9,8 @@ API_KEY = os.environ.get('NEWSAPI_KEY') or 'f509959c999b4d7e98cc62d75c0b3102'
 NEWS_ENDPOINT = 'https://newsapi.org/v2/everything'
 
 def fetch_bitcoin_news():
-    # 현재 한국 시간 기준 (UTC+9)
     now = datetime.utcnow() + timedelta(hours=9)
-    from_time = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+    from_time = (now - timedelta(days=3)).replace(hour=0, minute=0, second=0, microsecond=0)
 
     from_str = from_time.strftime('%Y-%m-%dT%H:%M:%S')
     to_str = now.strftime('%Y-%m-%dT%H:%M:%S')
@@ -27,7 +26,7 @@ def fetch_bitcoin_news():
             'pageSize': 100,
             'page': page,
             'apiKey': API_KEY,
-            'domains': 'zdnet.co.kr,businesspost.co.kr,www.g-enews.com,news.nate.com,coinreaders.com,ytn.co.kr,home.sarangbang.com,m.joseilbo.com,blockmedia.co.kr'
+            'domains': 'zdnet.co.kr,ohmynews.com,blockmedia.co.kr'
         }
         response = requests.get(NEWS_ENDPOINT, params=params)
         data = response.json()
@@ -36,11 +35,14 @@ def fetch_bitcoin_news():
             all_articles.append({
                 'title': article["title"],
                 'url': article["url"],
-                'source': article["source"]["name"]
+                'source': article["source"]["name"],
+                'publishedAt': article["publishedAt"]
             })
 
         if len(data.get("articles", [])) < 100:
             break
+
+    all_articles.sort(key=lambda x: x["publishedAt"], reverse=True)
 
     return all_articles
 
