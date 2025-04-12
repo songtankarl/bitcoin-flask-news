@@ -14,12 +14,20 @@ def scrape_coinreaders_news(query="비트코인"):
     soup = BeautifulSoup(response.text, "html.parser")
 
     articles = []
-    for a in soup.select("h2.tit a"):
-        title = a.get_text(strip=True)
-        link = a["href"]
+    for item in soup.select("div.item"):
+        a_tag = item.select_one("h2.tit a")
+        date_tag = item.select_one("span.date")
+
+        if not a_tag or not date_tag:
+            continue
+
+        title = a_tag.get_text(strip=True)
+        link = a_tag["href"]
         if not link.startswith("http"):
             link = "https://www.coinreaders.com" + link
-        articles.append({"title": title, "url": link})
+        date = date_tag.get_text(strip=True)
+
+        articles.append({"title": title, "url": link, "date": date})
 
     return articles
 
