@@ -26,7 +26,7 @@ def fetch_bitcoin_news():
             'sortBy': 'publishedAt',
             'pageSize': 100,
             'page': page,
-            'apiKey': API_KEY
+            'apiKey': API_KEY,
             'domains': 'zdnet.co.kr,businesspost.co.kr,www.g-enews.com,news.nate.com,coinreaders.com,ytn.co.kr,home.sarangbang.com,m.joseilbo.com,blockmedia.co.kr'
         }
         response = requests.get(NEWS_ENDPOINT, params=params)
