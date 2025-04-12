@@ -1,9 +1,12 @@
 from flask import Flask, jsonify, render_template, request
+from flask_cors import CORS
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta, timezone
 
 app = Flask(__name__)
+CORS(app)  # CORS 허용
+
 KST = timezone(timedelta(hours=9))
 
 def fetch_naver_news(query="비트코인"):
@@ -12,7 +15,7 @@ def fetch_naver_news(query="비트코인"):
 
     now_kst = datetime.now(KST)
     today = now_kst.date()
-    targets = [today - timedelta(days=i) for i in range(4)]
+    targets = [today - timedelta(days=i) for i in range(3)]
 
     date_map = {date: [] for date in targets}
 
@@ -37,7 +40,7 @@ def fetch_naver_news(query="비트코인"):
         except:
             return
 
-        if article_date in date_map and len(date_map[article_date]) < 35:
+        if article_date in date_map and len(date_map[article_date]) < 30:
             date_map[article_date].append(article)
 
     count = 0
