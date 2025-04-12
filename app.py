@@ -1,19 +1,18 @@
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta, timezone
 
 app = Flask(__name__)
-
 KST = timezone(timedelta(hours=9))
 
-def fetch_naver_news():
+def fetch_naver_news(query="비트코인"):
     headers = {"User-Agent": "Mozilla/5.0"}
-    base_url = "https://search.naver.com/search.naver?where=news&query=비트코인&start="
+    base_url = f"https://search.naver.com/search.naver?where=news&query={query}&start="
 
     now_kst = datetime.now(KST)
     today = now_kst.date()
-    targets = [today - timedelta(days=i) for i in range(4)]
+    targets = [today - timedelta(days=i) for i in range(3)]
 
     date_map = {date: [] for date in targets}
 
@@ -38,7 +37,7 @@ def fetch_naver_news():
         except:
             return
 
-        if article_date in date_map and len(date_map[article_date]) < 40:
+        if article_date in date_map and len(date_map[article_date]) < 30:
             date_map[article_date].append(article)
 
     count = 0
@@ -89,7 +88,8 @@ def index():
 
 @app.route('/api/news')
 def get_news():
-    return jsonify(fetch_naver_news())
+    query = request.args.get("query", "비트코인")
+    return jsonify(fetch_naver_news(query))
 
 if __name__ == '__main__':
     app.run(debug=True)

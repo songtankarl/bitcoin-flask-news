@@ -2,10 +2,13 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>네이버 비트코인 뉴스</title>
+  <title>네이버 뉴스 검색</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 30px; background: #f9f9f9; }
     h1 { color: #333; }
+    form { margin-bottom: 20px; }
+    input[type="text"] { padding: 10px; width: 300px; font-size: 16px; }
+    button { padding: 10px; font-size: 16px; }
     h2 { margin-top: 40px; border-bottom: 2px solid #ccc; padding-bottom: 5px; }
     ul { list-style: none; padding: 0; }
     li { margin-bottom: 15px; padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
@@ -16,44 +19,59 @@
   </style>
 </head>
 <body>
-  <h1>네이버 비트코인 뉴스 (최근 3일)</h1>
+  <h1>네이버 뉴스 검색 (최근 3일)</h1>
+  <form id="search-form">
+    <input type="text" id="query" placeholder="검색어를 입력하세요" value="비트코인" />
+    <button type="submit">검색</button>
+  </form>
+
   <div id="news-container">로딩 중...</div>
 
   <script>
-    fetch("/api/news")
-      .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById("news-container");
-        container.innerHTML = '';
+    const form = document.getElementById("search-form");
+    const input = document.getElementById("query");
 
-        const sortedKeys = Object.keys(data).sort().reverse();
-        sortedKeys.forEach(dateKey => {
-          const section = document.createElement("section");
-          const title = document.createElement("h2");
-          title.innerText = dateKey;
-          section.appendChild(title);
+    function loadNews(query) {
+      const container = document.getElementById("news-container");
+      container.innerHTML = '로딩 중...';
 
-          const ul = document.createElement("ul");
-          if (data[dateKey].length === 0) {
-            const li = document.createElement("li");
-            li.innerHTML = "<i>해당 날짜의 기사가 없습니다.</i>";
-            ul.appendChild(li);
-          } else {
-            data[dateKey].forEach(item => {
+      fetch("/api/news?query=" + encodeURIComponent(query))
+        .then(res => res.json())
+        .then(data => {
+          container.innerHTML = '';
+          const sortedKeys = Object.keys(data).sort().reverse();
+
+          sortedKeys.forEach(dateKey => {
+            const section = document.createElement("section");
+            const title = document.createElement("h2");
+            title.innerText = dateKey;
+            section.appendChild(title);
+
+            const ul = document.createElement("ul");
+            if (data[dateKey].length === 0) {
               const li = document.createElement("li");
-              li.innerHTML = `<a href="${item.url}" target="_blank">[${item.press}] ${item.title}</a><small>${item.date}</small>`;
+              li.innerHTML = "<i>해당 날짜의 기사가 없습니다.</i>";
               ul.appendChild(li);
-            });
-          }
+            } else {
+              data[dateKey].forEach(item => {
+                const li = document.createElement("li");
+                li.innerHTML = `<a href="${item.url}" target="_blank">[${item.press}] ${item.title}</a><small>${item.date}</small>`;
+                ul.appendChild(li);
+              });
+            }
 
-          section.appendChild(ul);
-          container.appendChild(section);
+            section.appendChild(ul);
+            container.appendChild(section);
+          });
         });
-      })
-      .catch(err => {
-        document.getElementById("news-container").innerHTML = '뉴스를 불러오는 데 실패했습니다.';
-        console.error(err);
-      });
+    }
+
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+      loadNews(input.value);
+    });
+
+    window.onload = () => loadNews("비트코인");
   </script>
 </body>
 </html>
