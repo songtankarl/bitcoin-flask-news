@@ -2,35 +2,55 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>네이버 비트코인 뉴스</title>
+  <title>네이버 비트코인 뉴스 (카테고리별)</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 30px; background: #f9f9f9; }
     h1 { color: #333; }
+    h2 { margin-top: 40px; border-bottom: 2px solid #ccc; padding-bottom: 5px; }
     ul { list-style: none; padding: 0; }
-    li { margin-bottom: 20px; padding: 15px; background: white; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    li { margin-bottom: 15px; padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     a { text-decoration: none; color: #007bff; font-weight: bold; }
     a:hover { text-decoration: underline; }
     small { display: block; color: #666; margin-top: 5px; }
   </style>
 </head>
 <body>
-  <h1>네이버 비트코인 뉴스 (최근 3일 이내)</h1>
-  <ul id="news-list">로딩 중...</ul>
+  <h1>네이버 비트코인 뉴스</h1>
+
+  <h2>오늘 기사</h2>
+  <ul id="today-list">로딩 중...</ul>
+
+  <h2>1일 전 기사</h2>
+  <ul id="one-day-list">로딩 중...</ul>
+
+  <h2>2일 전 기사</h2>
+  <ul id="two-day-list">로딩 중...</ul>
 
   <script>
     fetch("/api/news")
       .then(res => res.json())
       .then(data => {
-        const ul = document.getElementById("news-list");
-        ul.innerHTML = '';
-        data.forEach(item => {
-          const li = document.createElement("li");
-          li.innerHTML = `<a href="${item.url}" target="_blank">[${item.press}] ${item.title}</a><small>${item.date}</small>`;
-          ul.appendChild(li);
-        });
+        const todayList = document.getElementById("today-list");
+        const oneDayList = document.getElementById("one-day-list");
+        const twoDayList = document.getElementById("two-day-list");
+
+        const render = (list, items) => {
+          list.innerHTML = '';
+          items.forEach(item => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="${item.url}" target="_blank">[${item.press}] ${item.title}</a><small>${item.date}</small>`;
+            list.appendChild(li);
+          });
+        };
+
+        render(todayList, data.today);
+        render(oneDayList, data.one_day_ago);
+        render(twoDayList, data.two_days_ago);
       })
       .catch(err => {
-        document.getElementById("news-list").innerHTML = '뉴스를 불러오는 데 실패했습니다.';
+        document.getElementById("today-list").innerHTML = '뉴스 로딩 실패';
+        document.getElementById("one-day-list").innerHTML = '';
+        document.getElementById("two-day-list").innerHTML = '';
         console.error(err);
       });
   </script>
