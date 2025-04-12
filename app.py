@@ -22,6 +22,7 @@ def fetch_bitcoin_news():
             'q': '비트코인 OR bitcoin',
             'from': from_str,
             'to': to_str,
+            'language': 'ko',
             'sortBy': 'publishedAt',
             'pageSize': 100,
             'page': page,
