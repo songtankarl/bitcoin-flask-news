@@ -20,20 +20,24 @@ def fetch_naver_news():
     }
 
     def classify_article(date_str, article):
-        date_str = date_str.strip()
-        if "분 전" in date_str or "시간 전" in date_str or "오늘" in date_str or "전" in date_str:
+        d = date_str.strip()
+        if "분 전" in d or "시간 전" in d or "오늘" in d or "전" in d:
             categories["today"].append(article)
         else:
             try:
-                published_date = datetime.strptime(date_str, "%Y.%m.%d.").date()
-                if published_date == today:
-                    categories["today"].append(article)
-                elif published_date == one_day_ago:
-                    categories["one_day_ago"].append(article)
-                elif published_date == two_days_ago:
-                    categories["two_days_ago"].append(article)
-            except:
-                pass
+                published_date = datetime.strptime(d, "%Y.%m.%d.").date()
+            except ValueError:
+                try:
+                    published_date = datetime.strptime(d, "%Y.%m.%d").date()
+                except:
+                    return
+
+            if published_date == today:
+                categories["today"].append(article)
+            elif published_date == one_day_ago:
+                categories["one_day_ago"].append(article)
+            elif published_date == two_days_ago:
+                categories["two_days_ago"].append(article)
 
     count = 0
     for page in range(1, 11):  # 최대 100개 기사
