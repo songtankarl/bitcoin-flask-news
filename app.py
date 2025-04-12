@@ -1,16 +1,18 @@
 from flask import Flask, jsonify, render_template
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 app = Flask(__name__)
+
+KST = timezone(timedelta(hours=9))
 
 def fetch_naver_news():
     headers = {"User-Agent": "Mozilla/5.0"}
     base_url = "https://search.naver.com/search.naver?where=news&query=비트코인&start="
 
-    today = datetime.now().date()
-    targets = [today - timedelta(days=i) for i in range(3)]  # today, -1, -2
+    today = datetime.now(KST).date()
+    targets = [today - timedelta(days=i) for i in range(3)]
 
     date_map = {date: [] for date in targets}
 
@@ -71,7 +73,7 @@ def fetch_naver_news():
             break
 
     result = {}
-    for dt in targets:
+    for dt in sorted(date_map.keys(), reverse=True):
         key = dt.strftime("%Y년 %m월 %d일")
         result[key] = date_map.get(dt, [])
 
