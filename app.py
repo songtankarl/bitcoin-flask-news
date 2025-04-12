@@ -12,7 +12,7 @@ def fetch_naver_news(query="비트코인"):
 
     now_kst = datetime.now(KST)
     today = now_kst.date()
-    targets = [today - timedelta(days=i) for i in range(3)]
+    targets = [today - timedelta(days=i) for i in range(4)]
 
     date_map = {date: [] for date in targets}
 
@@ -37,7 +37,7 @@ def fetch_naver_news(query="비트코인"):
         except:
             return
 
-        if article_date in date_map and len(date_map[article_date]) < 30:
+        if article_date in date_map and len(date_map[article_date]) < 35:
             date_map[article_date].append(article)
 
     count = 0
