@@ -9,16 +9,21 @@ API_KEY = os.environ.get('NEWSAPI_KEY') or 'f509959c999b4d7e98cc62d75c0b3102'
 NEWS_ENDPOINT = 'https://newsapi.org/v2/everything'
 
 def fetch_bitcoin_news():
-    from_date = (datetime.now() - timedelta(days=3)).strftime('%Y-%m-%d')
+    # 현재 한국 시간 기준 (UTC+9)
+    now = datetime.utcnow() + timedelta(hours=9)
+    from_time = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+
+    from_str = from_time.strftime('%Y-%m-%dT%H:%M:%S')
+    to_str = now.strftime('%Y-%m-%dT%H:%M:%S')
 
     all_articles = []
-    seen_sources = set()
 
-    for page in range(1, 6):  # 1~5페이지 반복
+    for page in range(1, 6):
         params = {
             'q': '비트코인',
             'language': 'ko',
-            'from': from_date,
+            'from': from_str,
+            'to': to_str,
             'sortBy': 'publishedAt',
             'pageSize': 100,
             'page': page,
@@ -28,14 +33,11 @@ def fetch_bitcoin_news():
         data = response.json()
 
         for article in data.get("articles", []):
-            source = article["source"]["name"]
-            if source not in seen_sources:
-                seen_sources.add(source)
-                all_articles.append({
-                    'title': article["title"],
-                    'url': article["url"],
-                    'source': source
-                })
+            all_articles.append({
+                'title': article["title"],
+                'url': article["url"],
+                'source': article["source"]["name"]
+            })
 
         if len(data.get("articles", [])) < 100:
             break
