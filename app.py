@@ -11,7 +11,8 @@ def fetch_naver_news():
     headers = {"User-Agent": "Mozilla/5.0"}
     base_url = "https://search.naver.com/search.naver?where=news&query=비트코인&start="
 
-    today = datetime.now(KST).date()
+    now_kst = datetime.now(KST)
+    today = now_kst.date()
     targets = [today - timedelta(days=i) for i in range(3)]
 
     date_map = {date: [] for date in targets}
@@ -24,7 +25,10 @@ def fetch_naver_news():
             if "일 전" in d:
                 days_ago = int(d.replace("일 전", "").strip())
                 article_date = today - timedelta(days=days_ago)
-            elif "시간 전" in d or "분 전" in d:
+            elif "시간 전" in d:
+                hours_ago = int(d.replace("시간 전", "").strip())
+                article_date = (now_kst - timedelta(hours=hours_ago)).date()
+            elif "분 전" in d:
                 article_date = today
             else:
                 try:
