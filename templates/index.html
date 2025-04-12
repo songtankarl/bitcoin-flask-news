@@ -15,42 +15,35 @@
   </style>
 </head>
 <body>
-  <h1>네이버 비트코인 뉴스</h1>
-
-  <h2>오늘 기사</h2>
-  <ul id="today-list">로딩 중...</ul>
-
-  <h2>1일 전 기사</h2>
-  <ul id="one-day-list">로딩 중...</ul>
-
-  <h2>2일 전 기사</h2>
-  <ul id="two-day-list">로딩 중...</ul>
+  <h1>네이버 비트코인 뉴스 (최근 3일)</h1>
+  <div id="news-container">로딩 중...</div>
 
   <script>
     fetch("/api/news")
       .then(res => res.json())
       .then(data => {
-        const todayList = document.getElementById("today-list");
-        const oneDayList = document.getElementById("one-day-list");
-        const twoDayList = document.getElementById("two-day-list");
+        const container = document.getElementById("news-container");
+        container.innerHTML = '';
 
-        const render = (list, items) => {
-          list.innerHTML = '';
-          items.forEach(item => {
+        Object.keys(data).forEach(dateKey => {
+          const section = document.createElement("section");
+          const title = document.createElement("h2");
+          title.innerText = dateKey;
+          section.appendChild(title);
+
+          const ul = document.createElement("ul");
+          data[dateKey].forEach(item => {
             const li = document.createElement("li");
             li.innerHTML = `<a href="${item.url}" target="_blank">[${item.press}] ${item.title}</a><small>${item.date}</small>`;
-            list.appendChild(li);
+            ul.appendChild(li);
           });
-        };
 
-        render(todayList, data.today);
-        render(oneDayList, data.one_day_ago);
-        render(twoDayList, data.two_days_ago);
+          section.appendChild(ul);
+          container.appendChild(section);
+        });
       })
       .catch(err => {
-        document.getElementById("today-list").innerHTML = '뉴스 로딩 실패';
-        document.getElementById("one-day-list").innerHTML = '';
-        document.getElementById("two-day-list").innerHTML = '';
+        document.getElementById("news-container").innerHTML = '뉴스를 불러오는 데 실패했습니다.';
         console.error(err);
       });
   </script>

@@ -10,37 +10,31 @@ def fetch_naver_news():
     base_url = "https://search.naver.com/search.naver?where=news&query=비트코인&start="
 
     today = datetime.now().date()
-    one_day_ago = today - timedelta(days=1)
-    two_days_ago = today - timedelta(days=2)
-
-    categories = {
-        "today": [],
-        "one_day_ago": [],
-        "two_days_ago": []
+    date_map = {
+        today: [],
+        today - timedelta(days=1): [],
+        today - timedelta(days=2): []
     }
 
     def classify_article(date_str, article):
         d = date_str.strip()
+        article_date = None
         if "분 전" in d or "시간 전" in d or "오늘" in d or "전" in d:
-            categories["today"].append(article)
+            article_date = today
         else:
             try:
-                published_date = datetime.strptime(d, "%Y.%m.%d.").date()
+                article_date = datetime.strptime(d, "%Y.%m.%d.").date()
             except ValueError:
                 try:
-                    published_date = datetime.strptime(d, "%Y.%m.%d").date()
+                    article_date = datetime.strptime(d, "%Y.%m.%d").date()
                 except:
                     return
 
-            if published_date == today:
-                categories["today"].append(article)
-            elif published_date == one_day_ago:
-                categories["one_day_ago"].append(article)
-            elif published_date == two_days_ago:
-                categories["two_days_ago"].append(article)
+        if article_date in date_map and len(date_map[article_date]) < 30:
+            date_map[article_date].append(article)
 
     count = 0
-    for page in range(1, 11):  # 최대 100개 기사
+    for page in range(1, 11):
         start = (page - 1) * 10 + 1
         url = base_url + str(start)
         response = requests.get(url, headers=headers)
@@ -70,9 +64,15 @@ def fetch_naver_news():
 
             count += 1
             if count >= 100:
-                return categories
+                break
+        if count >= 100:
+            break
 
-    return categories
+    result = {}
+    for dt, articles in date_map.items():
+        key = dt.strftime("%Y년 %m월 %d일")
+        result[key] = articles
+    return result
 
 @app.route('/')
 def index():
