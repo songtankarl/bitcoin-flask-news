@@ -32,11 +32,17 @@
           section.appendChild(title);
 
           const ul = document.createElement("ul");
-          data[dateKey].forEach(item => {
+          if (data[dateKey].length === 0) {
             const li = document.createElement("li");
-            li.innerHTML = `<a href="${item.url}" target="_blank">[${item.press}] ${item.title}</a><small>${item.date}</small>`;
+            li.innerHTML = "<i>해당 날짜의 기사가 없습니다.</i>";
             ul.appendChild(li);
-          });
+          } else {
+            data[dateKey].forEach(item => {
+              const li = document.createElement("li");
+              li.innerHTML = `<a href="${item.url}" target="_blank">[${item.press}] ${item.title}</a><small>${item.date}</small>`;
+              ul.appendChild(li);
+            });
+          }
 
           section.appendChild(ul);
           container.appendChild(section);

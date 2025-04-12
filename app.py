@@ -10,11 +10,9 @@ def fetch_naver_news():
     base_url = "https://search.naver.com/search.naver?where=news&query=비트코인&start="
 
     today = datetime.now().date()
-    date_map = {
-        today: [],
-        today - timedelta(days=1): [],
-        today - timedelta(days=2): []
-    }
+    targets = [today - timedelta(days=i) for i in range(3)]  # today, -1, -2
+
+    date_map = {date: [] for date in targets}
 
     def classify_article(date_str, article):
         d = date_str.strip()
@@ -30,10 +28,7 @@ def fetch_naver_news():
                 try:
                     article_date = datetime.strptime(d, "%Y.%m.%d.").date()
                 except ValueError:
-                    try:
-                        article_date = datetime.strptime(d, "%Y.%m.%d").date()
-                    except:
-                        return
+                    return
         except:
             return
 
@@ -76,9 +71,9 @@ def fetch_naver_news():
             break
 
     result = {}
-    for dt, articles in date_map.items():
+    for dt in sorted(date_map.keys(), reverse=True):
         key = dt.strftime("%Y년 %m월 %d일")
-        result[key] = articles
+        result[key] = date_map[dt]
     return result
 
 @app.route('/')
