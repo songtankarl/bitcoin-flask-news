@@ -12,6 +12,7 @@
     a { text-decoration: none; color: #007bff; font-weight: bold; }
     a:hover { text-decoration: underline; }
     small { display: block; color: #666; margin-top: 5px; }
+    i { color: #999; }
   </style>
 </head>
 <body>
@@ -25,7 +26,8 @@
         const container = document.getElementById("news-container");
         container.innerHTML = '';
 
-        Object.keys(data).forEach(dateKey => {
+        const sortedKeys = Object.keys(data).sort().reverse();
+        sortedKeys.forEach(dateKey => {
           const section = document.createElement("section");
           const title = document.createElement("h2");
           title.innerText = dateKey;

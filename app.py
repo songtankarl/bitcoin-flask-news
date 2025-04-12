@@ -36,7 +36,7 @@ def fetch_naver_news():
             date_map[article_date].append(article)
 
     count = 0
-    for page in range(1, 11):  # 최대 100개 기사
+    for page in range(1, 11):
         start = (page - 1) * 10 + 1
         url = base_url + str(start)
         response = requests.get(url, headers=headers)
@@ -71,9 +71,10 @@ def fetch_naver_news():
             break
 
     result = {}
-    for dt in sorted(date_map.keys(), reverse=True):
+    for dt in targets:
         key = dt.strftime("%Y년 %m월 %d일")
-        result[key] = date_map[dt]
+        result[key] = date_map.get(dt, [])
+
     return result
 
 @app.route('/')
