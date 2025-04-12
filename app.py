@@ -4,12 +4,9 @@ from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 
-def scrape_coinreaders_news(query="비트코인"):
-    url = f"https://www.coinreaders.com/search?search={query}"
-    headers = {
-        "User-Agent": "Mozilla/5.0"
-    }
-
+def fetch_blockmedia_news():
+    url = "https://www.blockmedia.co.kr/?s=비트코인"
+    headers = {"User-Agent": "Mozilla/5.0"}
     response = requests.get(url, headers=headers)
     soup = BeautifulSoup(response.text, "html.parser")
 
@@ -24,7 +21,7 @@ def scrape_coinreaders_news(query="비트코인"):
         title = a_tag.get_text(strip=True)
         link = a_tag["href"]
         if not link.startswith("http"):
-            link = "https://www.coinreaders.com" + link
+            link = "https://www.blockmedia.co.kr" + link
         date = date_tag.get_text(strip=True)
 
         articles.append({"title": title, "url": link, "date": date})
@@ -37,7 +34,7 @@ def index():
 
 @app.route('/api/news')
 def get_news():
-    return jsonify(scrape_coinreaders_news())
+    return jsonify(fetch_blockmedia_news())
 
 if __name__ == '__main__':
     app.run(debug=True)
