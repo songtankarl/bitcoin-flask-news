@@ -20,8 +20,7 @@ def fetch_bitcoin_news():
 
     for page in range(1, 6):
         params = {
-            'q': '비트코인',
-            'language': 'ko',
+            'q': '비트코인 OR bitcoin',
             'from': from_str,
             'to': to_str,
             'sortBy': 'publishedAt',
