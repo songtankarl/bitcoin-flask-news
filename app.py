@@ -1,52 +1,27 @@
 from flask import Flask, jsonify, render_template
 import requests
-import os
-from datetime import datetime, timedelta
+from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 
-API_KEY = os.environ.get('NEWSAPI_KEY') or 'f509959c999b4d7e98cc62d75c0b3102'
-NEWS_ENDPOINT = 'https://newsapi.org/v2/everything'
+def scrape_coinreaders_news(query="비트코인"):
+    url = f"https://www.coinreaders.com/search?search={query}"
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
 
-def fetch_bitcoin_news():
-    now = datetime.utcnow() + timedelta(hours=9)
-    from_time = (now - timedelta(days=3)).replace(hour=0, minute=0, second=0, microsecond=0)
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, "html.parser")
 
-    from_str = from_time.strftime('%Y-%m-%dT%H:%M:%S')
-    to_str = now.strftime('%Y-%m-%dT%H:%M:%S')
+    articles = []
+    for a in soup.select("h2.tit a"):
+        title = a.get_text(strip=True)
+        link = a["href"]
+        if not link.startswith("http"):
+            link = "https://www.coinreaders.com" + link
+        articles.append({"title": title, "url": link})
 
-    all_articles = []
-
-    for page in range(1, 6):
-        params = {
-            'q': '비트코인 OR bitcoin',
-            'from': from_str,
-            'to': to_str,
-            'language': 'ko',
-            'sortBy': 'publishedAt',
-            'pageSize': 100,
-            'page': page,
-            'apiKey': API_KEY,
-            # 'domains': 'coindesk.com,cointelegraph.com,cnn.com'
-            # 'domains': 'theguru.co.kr,businesspost.co.kr,news.nate.com,home.sarangbang.com,mk.co.kr,m.joseilbo.com,g-enews.com,economist.co.kr,blockmedia.co.kr,digitaltoday.co.kr,bloomingbit.io'
-        }
-        response = requests.get(NEWS_ENDPOINT, params=params)
-        data = response.json()
-
-        for article in data.get("articles", []):
-            all_articles.append({
-                'title': article["title"],
-                'url': article["url"],
-                'source': article["source"]["name"],
-                'publishedAt': article["publishedAt"]
-            })
-
-        if len(data.get("articles", [])) < 100:
-            break
-
-    all_articles.sort(key=lambda x: x["publishedAt"], reverse=True)
-
-    return all_articles
+    return articles
 
 @app.route('/')
 def index():
@@ -54,7 +29,7 @@ def index():
 
 @app.route('/api/news')
 def get_news():
-    return jsonify(fetch_bitcoin_news())
+    return jsonify(scrape_coinreaders_news())
 
 if __name__ == '__main__':
     app.run(debug=True)

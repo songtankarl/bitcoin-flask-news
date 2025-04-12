@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>비트코인 뉴스 모음</title>
+  <title>코인리더스 뉴스 (비트코인)</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 30px; background: #f9f9f9; }
     h1 { color: #333; }
@@ -10,11 +10,10 @@
     li { margin-bottom: 15px; padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     a { text-decoration: none; color: #007bff; }
     a:hover { text-decoration: underline; }
-    small { color: #666; }
   </style>
 </head>
 <body>
-  <h1>비트코인 뉴스 (최근 3일)</h1>
+  <h1>코인리더스 뉴스 (비트코인)</h1>
   <ul id="news-list">로딩 중...</ul>
 
   <script>
@@ -25,7 +24,7 @@
         ul.innerHTML = '';
         data.forEach(item => {
           const li = document.createElement("li");
-          li.innerHTML = `<a href="${item.url}" target="_blank">${item.source} - ${item.title}</a><br><small>${item.publishedAt}</small>`;
+          li.innerHTML = `<a href="${item.url}" target="_blank">${item.title}</a>`;
           ul.appendChild(li);
         });
       })
