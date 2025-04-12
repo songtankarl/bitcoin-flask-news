@@ -7,14 +7,14 @@
     body { font-family: Arial, sans-serif; margin: 30px; background: #f9f9f9; }
     h1 { color: #333; }
     ul { list-style: none; padding: 0; }
-    li { margin-bottom: 15px; padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    li { margin-bottom: 20px; padding: 15px; background: white; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     a { text-decoration: none; color: #007bff; font-weight: bold; }
     a:hover { text-decoration: underline; }
-    small { color: #888; }
+    small { display: block; color: #666; margin-top: 5px; }
   </style>
 </head>
 <body>
-  <h1>네이버 비트코인 뉴스</h1>
+  <h1>네이버 비트코인 뉴스 (최근 3일 이내)</h1>
   <ul id="news-list">로딩 중...</ul>
 
   <script>
@@ -25,7 +25,7 @@
         ul.innerHTML = '';
         data.forEach(item => {
           const li = document.createElement("li");
-          li.innerHTML = `<a href="${item.url}" target="_blank">${item.title}</a><br><small>${item.date}</small>`;
+          li.innerHTML = `<a href="${item.url}" target="_blank">[${item.press}] ${item.title}</a><small>${item.date}</small>`;
           ul.appendChild(li);
         });
       })
