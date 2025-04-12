@@ -4,24 +4,22 @@ from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 
-def fetch_blockmedia_news():
-    url = "https://www.blockmedia.co.kr/?s=비트코인"
+def fetch_naver_news():
+    url = "https://search.naver.com/search.naver?where=news&query=비트코인"
     headers = {"User-Agent": "Mozilla/5.0"}
     response = requests.get(url, headers=headers)
     soup = BeautifulSoup(response.text, "html.parser")
 
     articles = []
-    for item in soup.select("div.item"):
-        a_tag = item.select_one("h2.tit a")
-        date_tag = item.select_one("span.date")
+    for item in soup.select("div.news_area"):
+        a_tag = item.select_one("a.news_tit")
+        date_tag = item.select_one("span.info")
 
         if not a_tag or not date_tag:
             continue
 
         title = a_tag.get_text(strip=True)
         link = a_tag["href"]
-        if not link.startswith("http"):
-            link = "https://www.blockmedia.co.kr" + link
         date = date_tag.get_text(strip=True)
 
         articles.append({"title": title, "url": link, "date": date})
@@ -34,7 +32,7 @@ def index():
 
 @app.route('/api/news')
 def get_news():
-    return jsonify(fetch_blockmedia_news())
+    return jsonify(fetch_naver_news())
 
 if __name__ == '__main__':
     app.run(debug=True)
