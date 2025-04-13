@@ -1,36 +1,28 @@
-from flask import Flask, jsonify, render_template, request
-from flask_cors import CORS
+from flask import Flask, jsonify, render_template
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+from flask_caching import Cache
 
 app = Flask(__name__)
-CORS(app)  # CORS 허용
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
-KST = timezone(timedelta(hours=9))
-
-def fetch_naver_news(query="비트코인"):
+def fetch_naver_news():
     headers = {"User-Agent": "Mozilla/5.0"}
-    base_url = f"https://search.naver.com/search.naver?where=news&query={query}&start="
+    base_url = "https://search.naver.com/search.naver?where=news&query=비트코인&start="
 
-    now_kst = datetime.now(KST)
-    today = now_kst.date()
-    targets = [today - timedelta(days=i) for i in range(4)]
-
+    today = datetime.now().date()
+    targets = [today - timedelta(days=i) for i in range(3)]
     date_map = {date: [] for date in targets}
 
     def classify_article(date_str, article):
         d = date_str.strip()
         article_date = None
-
         try:
             if "일 전" in d:
                 days_ago = int(d.replace("일 전", "").strip())
                 article_date = today - timedelta(days=days_ago)
-            elif "시간 전" in d:
-                hours_ago = int(d.replace("시간 전", "").strip())
-                article_date = (now_kst - timedelta(hours=hours_ago)).date()
-            elif "분 전" in d:
+            elif "시간 전" in d or "분 전" in d:
                 article_date = today
             else:
                 try:
@@ -47,7 +39,7 @@ def fetch_naver_news(query="비트코인"):
     for page in range(1, 11):
         start = (page - 1) * 10 + 1
         url = base_url + str(start)
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=5)
         soup = BeautifulSoup(response.text, "html.parser")
 
         for item in soup.select("div.news_area"):
@@ -71,7 +63,6 @@ def fetch_naver_news(query="비트코인"):
             }
 
             classify_article(date_str, article)
-
             count += 1
             if count >= 100:
                 break
@@ -79,7 +70,7 @@ def fetch_naver_news(query="비트코인"):
             break
 
     result = {}
-    for dt in sorted(date_map.keys(), reverse=True):
+    for dt in targets:
         key = dt.strftime("%Y년 %m월 %d일")
         result[key] = date_map.get(dt, [])
 
@@ -90,9 +81,9 @@ def index():
     return render_template('index.html')
 
 @app.route('/api/news')
+@cache.cached(timeout=300)  # 🔥 5분 캐시 적용
 def get_news():
-    query = request.args.get("query", "비트코인")
-    return jsonify(fetch_naver_news(query))
+    return jsonify(fetch_naver_news())
 
 if __name__ == '__main__':
     app.run(debug=True)
