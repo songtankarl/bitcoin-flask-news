@@ -4,7 +4,10 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 from flask_caching import Cache
 
+from flask_cors import CORS
+
 app = Flask(__name__)
+CORS(app)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 def fetch_naver_news():
