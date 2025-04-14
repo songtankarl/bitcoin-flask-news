@@ -67,11 +67,11 @@ def news():
             d = item.select_one("span.info")
 
                 # 디버깅 로그 추가
-    print("🎯 기사 요소 탐색 결과:")
-    print("title:", a.get_text(strip=True) if a else "없음")
-    print("press:", p.get_text(strip=True) if p else "없음")
-    print("date :", d.get_text(strip=True) if d else "없음")
-    print("---")
+            print("🎯 기사 요소 탐색 결과:")
+            print("title:", a.get_text(strip=True) if a else "없음")
+            print("press:", p.get_text(strip=True) if p else "없음")
+            print("date :", d.get_text(strip=True) if d else "없음")
+            print("---")
 
     if not a or not p or not d:
         continue
