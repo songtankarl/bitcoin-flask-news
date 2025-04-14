@@ -73,7 +73,7 @@ def news():
             print("date :", d.get_text(strip=True) if d else "없음")
             print("---")
 
-    if not a or not p or not d:
+            if not a or not p or not d:
         continue
         
             if not a or not p or not d:
