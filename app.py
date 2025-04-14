@@ -74,7 +74,7 @@ def news():
             print("---")
 
             if not a or not p or not d:
-        continue
+                continue
         
             if not a or not p or not d:
                 continue
