@@ -27,25 +27,39 @@ def news():
         d = date_str.strip()
         article_date = None
         try:
-            if "일 전" in d:
+            now = datetime.now()
+
+            if any(x in d for x in ["초 전", "분 전", "시간 전", "방금 전", "오늘"]):
+                article_date = now.date()
+            elif "어제" in d:
+                article_date = now.date() - timedelta(days=1)
+            elif "그제" in d:
+                article_date = now.date() - timedelta(days=2)
+            elif "일 전" in d:
                 days = int(d.replace("일 전", "").strip())
-                article_date = today - timedelta(days=days)
-            elif "시간 전" in d or "분 전" in d:
-                article_date = today
+                article_date = now.date() - timedelta(days=days)
             else:
-                try:
-                    article_date = datetime.strptime(d, "%Y.%m.%d.").date()
-                except:
-                    return
-        except:
+                if d.endswith("."):
+                    d = d[:-1]
+                article_date = datetime.strptime(d, "%Y.%m.%d").date()
+
+            if article_date in date_map and len(date_map[article_date]) < 30:
+                date_map[article_date].append(article)
+
+        except Exception as e:
+            print(f"[❌ classify 실패] {d} → {e}")
             return
-        if article_date in date_map and len(date_map[article_date]) < 30:
-            date_map[article_date].append(article)
 
     count = 0
     for page in range(1, 11):
         url = base_url + str((page - 1) * 10 + 1)
-        soup = BeautifulSoup(requests.get(url, headers=headers).text, "html.parser")
+        try:
+            response = requests.get(url, headers=headers, timeout=5)
+            soup = BeautifulSoup(response.text, "html.parser")
+        except Exception as e:
+            print(f"⛔ 요청 실패: {e}")
+            continue
+
         for item in soup.select("div.news_area"):
             a = item.select_one("a.news_tit")
             p = item.select_one("a.info.press")
