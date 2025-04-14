@@ -19,25 +19,26 @@ def news():
     headers = {"User-Agent": "Mozilla/5.0"}
     base_url = "https://search.naver.com/search.naver?where=news&query=비트코인&start="
 
-    today = datetime.now().date()
-    targets = [today - timedelta(days=i) for i in range(4)]
-    date_map = {date: [] for date in targets}
+    now = datetime.now()
+    date_map = {}
+    for i in range(4):
+        date_key = (now - timedelta(days=i)).date()
+        date_map[date_key] = []
 
     def classify(date_str, article):
         d = date_str.strip()
-        article_date = None
         try:
-            now = datetime.now()
+            article_date = None
 
-            if any(x in d for x in ["초 전", "분 전", "시간 전", "방금 전", "오늘"]):
-                article_date = now.date()
-            elif "어제" in d:
-                article_date = now.date() - timedelta(days=1)
-            elif "그제" in d:
-                article_date = now.date() - timedelta(days=2)
-            elif "일 전" in d:
+            if "일 전" in d:
                 days = int(d.replace("일 전", "").strip())
-                article_date = now.date() - timedelta(days=days)
+                article_date = (now - timedelta(days=days)).date()
+            elif "어제" in d:
+                article_date = (now - timedelta(days=1)).date()
+            elif "그제" in d:
+                article_date = (now - timedelta(days=2)).date()
+            elif any(x in d for x in ["초 전", "분 전", "시간 전", "방금 전", "오늘"]):
+                article_date = now.date()
             else:
                 if d.endswith("."):
                     d = d[:-1]
@@ -79,7 +80,7 @@ def news():
         if count >= 100:
             break
 
-    result = {dt.strftime("%Y년 %m월 %d일"): date_map.get(dt, []) for dt in targets}
+    result = {dt.strftime("%Y년 %m월 %d일"): date_map.get(dt, []) for dt in sorted(date_map.keys(), reverse=True)}
     return jsonify(result)
 
 if __name__ == "__main__":
