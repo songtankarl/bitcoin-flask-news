@@ -4,3 +4,4 @@ flask-caching
 requests
 beautifulsoup4
 gunicorn
+pytz
