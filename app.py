@@ -59,7 +59,10 @@ def news():
         url = base_url + str((page - 1) * 10 + 1)
         try:
             response = requests.get(url, headers=headers, timeout=5)
+            print("🔍 네이버 응답 결과 (일부):")
+            print(response.text[:1000])  # 첫 1000글자만 출력
             soup = BeautifulSoup(response.text, "html.parser")
+            print("🧩 뉴스 박스 수:", len(soup.select("div.news_area")))
         except Exception as e:
             print(f"⛔ 요청 실패: {e}")
             continue
