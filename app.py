@@ -33,10 +33,10 @@ def news():
     def classify(date_str, article):
         d = date_str.strip().replace(".", "-").replace(" ", "")
         try:
-            if "일전" in d:
-                days = int(d.replace("일전", "").strip())
+            if "일 전" in d:
+                days = int(d.replace("일 전", "").strip())
                 article_date = today - timedelta(days=days)
-            elif "시간전" in d or "분전" in d:
+            elif "시간 전" in d or "분 전" in d:
                 article_date = today
             elif "-" in d:
                 article_date = datetime.strptime(d, "%Y-%m-%d").date()
