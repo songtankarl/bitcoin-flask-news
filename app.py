@@ -74,8 +74,8 @@ def news():
         classify(article["date"], article)
         count += 1
 
-    if count >= 100:
-        break
+        if count >= 100:
+            break
 
         if count >= 100:
             break
