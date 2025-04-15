@@ -5,30 +5,19 @@
     <title>비트코인 뉴스</title>
 </head>
 <body>
-    <h1>비트코인 뉴스 불러오기</h1>
+    <h1>비트코인 뉴스 보기</h1>
     <div id="news"></div>
     <script>
-        fetch("/api/news")
+        fetch('/api/news')
             .then(res => res.json())
-            .then(data => {
-                const newsDiv = document.getElementById("news");
-                for (let date in data) {
-                    const section = document.createElement("section");
-                    section.innerHTML = `<h2>${date}</h2>`;
-                    if (data[date].length === 0) {
-                        section.innerHTML += "<p>해당 날짜의 기사가 없습니다.</p>";
-                    } else {
-                        const list = document.createElement("ul");
-                        data[date].forEach(article => {
-                            const item = document.createElement("li");
-                            item.innerHTML = `<a href="${article.url}" target="_blank">${article.title}</a>`;
-                            list.appendChild(item);
-                        });
-                        section.appendChild(list);
-                    }
-                    newsDiv.appendChild(section);
-                }
-            });
+            .then(data => {{
+                const container = document.getElementById('news');
+                for (const [date, articles] of Object.entries(data)) {{
+                    const section = document.createElement('section');
+                    section.innerHTML = `<h2>${{date}}</h2>` + articles.map(a => `<p><a href="${{a.url}}" target="_blank">${{a.title}}</a></p>`).join('');
+                    container.appendChild(section);
+                }}
+            }});
     </script>
 </body>
 </html>
