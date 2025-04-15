@@ -70,29 +70,23 @@ def news():
             print(f"⛔ 요청 실패: {e}")
             continue
 
-        for item in soup.select("div.news_area"):
-            a = item.select_one("a.news_tit")
-            p = item.select_one("a.info.press")
-            d = item.select_one("span.info")
+        for a in soup.select("a.news_tit"):
+            title = a.get_text(strip=True)
+            link = a["href"]
 
-                # 디버깅 로그 추가
-            print("🎯 기사 요소 탐색 결과:")
-            print("title:", a.get_text(strip=True) if a else "없음")
-            print("press:", p.get_text(strip=True) if p else "없음")
-            print("date :", d.get_text(strip=True) if d else "없음")
-            print("---")
-
-            if not a or not p or not d:
-                continue
-        
-            if not a or not p or not d:
-                continue
             article = {
-                "title": a.get_text(strip=True),
-                "url": a["href"],
-                "press": p.get_text(strip=True).replace("언론사 선정", "").strip(),
-                "date": d.get_text(strip=True)
-            }
+                "title": title,
+                "url": link,
+                "press": "N/A",
+                "date": now.strftime("%Y.%m.%d")  # 임시 날짜
+                        }
+
+            # 오늘 날짜에 강제로 넣기 (정상 작동 확인용)
+            date_map[today].append(article)
+            count += 1
+        if count >= 30:
+        break
+        
             classify(article["date"], article)
             count += 1
             if count >= 100:
