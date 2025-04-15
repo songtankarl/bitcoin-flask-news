@@ -1,23 +1,44 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>비트코인 뉴스</title>
+  <meta charset="UTF-8">
+  <title>B+todo</title>
 </head>
 <body>
-    <h1>비트코인 뉴스 보기</h1>
-    <div id="news"></div>
-    <script>
-        fetch('/api/news')
-            .then(res => res.json())
-            .then(data => {{
-                const container = document.getElementById('news');
-                for (const [date, articles] of Object.entries(data)) {{
-                    const section = document.createElement('section');
-                    section.innerHTML = `<h2>${{date}}</h2>` + articles.map(a => `<p><a href="${{a.url}}" target="_blank">${{a.title}}</a></p>`).join('');
-                    container.appendChild(section);
-                }}
-            }});
-    </script>
+  <h1>B+todo</h1>
+  <h2>비트코인 뉴스</h2>
+  <div id="news-container">로딩 중...</div>
+  <script>
+    fetch("/api/news")
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById("news-container");
+        container.innerHTML = "";
+        Object.keys(data).forEach(date => {
+          const section = document.createElement("div");
+          const h3 = document.createElement("h3");
+          h3.textContent = date;
+          section.appendChild(h3);
+          if (data[date].length === 0) {
+            const p = document.createElement("p");
+            p.textContent = "해당 날짜의 기사가 없습니다.";
+            section.appendChild(p);
+          } else {
+            data[date].forEach(article => {
+              const a = document.createElement("a");
+              a.href = article.url;
+              a.textContent = `[${article.press}] ${article.title}`;
+              a.target = "_blank";
+              section.appendChild(a);
+              section.appendChild(document.createElement("br"));
+            });
+          }
+          container.appendChild(section);
+        });
+      })
+      .catch(() => {
+        document.getElementById("news-container").textContent = "뉴스를 불러오지 못했습니다.";
+      });
+  </script>
 </body>
 </html>
