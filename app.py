@@ -17,15 +17,15 @@ def home():
 @cache.cached(timeout=300)
 @app.route("/api/news")
 def news():
-    headers = {{
+    headers = {
         "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1"
-    }}
+    }
     base_url = "https://search.naver.com/search.naver?where=news&query=비트코인&start="
 
     now = datetime.now(timezone('Asia/Seoul'))
     today = now.date()
     
-    date_map = {{}}
+    date_map = {}
     for i in range(4):
         date_key = today - timedelta(days=i)
         date_map[date_key] = []
@@ -47,7 +47,7 @@ def news():
             if article_date in date_map and len(date_map[article_date]) < 30:
                 date_map[article_date].append(article)
         except Exception as e:
-            print(f"[❌ classify 실패] {{d}} → {{e}}")
+            print(f"[❌ classify 실패] {d} → {e}")
             return
 
     count = 0
@@ -57,7 +57,7 @@ def news():
             response = requests.get(url, headers=headers, timeout=5)
             soup = BeautifulSoup(response.text, "html.parser")
         except Exception as e:
-            print(f"⛔ 요청 실패: {{e}}")
+            print(f"⛔ 요청 실패: {e}")
             continue
 
         for item in soup.select("li.bx"):
@@ -65,26 +65,26 @@ def news():
             date_tag = None
             for span in item.select("span.info"):
                 text = span.get_text(strip=True)
-                if "2025." in text or "2024." in text:
+                if "2025." in text or "2024." in text or "일 전" in text:
                     date_tag = text
                     break
 
             if not a or not date_tag:
                 continue
 
-            article = {{
+            article = {
                 "title": a.get_text(strip=True),
                 "url": a["href"],
                 "press": "N/A",
                 "date": date_tag
-            }}
+            }
             classify(article["date"], article)
             count += 1
 
         if count >= 100:
             break
 
-    result = {{dt.strftime("%Y년 %m월 %d일"): date_map.get(dt, []) for dt in sorted(date_map.keys(), reverse=True)}}
+    result = {dt.strftime("%Y년 %m월 %d일"): date_map.get(dt, []) for dt in sorted(date_map.keys(), reverse=True)}
     return jsonify(result)
 
 if __name__ == "__main__":
