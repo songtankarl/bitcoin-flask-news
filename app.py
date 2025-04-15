@@ -52,16 +52,21 @@ def news():
 
         for item in soup.select("li.bx"):
             a = item.select_one("a.news_tit")
-            date_tag = item.select_one("span.date")
+            date_tag = None
+            for span in item.select("span.info"):
+                text = span.get_text(strip=True)
+                if "전" in text or "." in text:
+                date_tag = text
+                    break
 
-            if not a or not date_tag:
+        if not a or not date_tag:
                 continue
 
             article = {
                 "title": a.get_text(strip=True),
                 "url": a["href"],
                 "press": "N/A",
-                "date": date_tag.get_text(strip=True)
+                "date": date_tag  # 이미 문자열
             }
             classify(article["date"], article)
             count += 1
