@@ -8,7 +8,7 @@ from pytz import timezone
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
-cache = Cache(app, config={{'CACHE_TYPE': 'SimpleCache'}})
+cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache'})
 
 @app.route("/")
 def home():
