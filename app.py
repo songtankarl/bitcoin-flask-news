@@ -26,7 +26,6 @@ def news():
     }
     base_url = "https://m.search.naver.com/search.naver?where=m_news&query=비트코인&start="
 
-    # 현재(한국 시간) 날짜 구하기
     now = datetime.now(timezone('Asia/Seoul'))
     today = now.date()
 
@@ -38,17 +37,16 @@ def news():
 
     def classify_relative_date(date_str: str):
         """
-        'n시간 전', 'n분 전', 'n일 전', 'YYYY.MM.DD.', 'YYYY.MM.DD' 형태 등을
+        'n시간 전', 'n분 전', 'n일 전', 'YYYY.MM.DD.', 'YYYY.MM.DD' 등을
         제대로 파싱하여 date 객체(년-월-일)로 반환. 파싱 실패 시 None.
         """
-
         date_str = date_str.strip()
-        # 혹시 "2025.04.15." 처럼 끝에 점이 붙어있으면 제거
-        # (단, 'n시간 전' 같은 표현까지 잘라내면 안 되므로 주의)
+
+        # 예: "2025.04.15." → "2025.04.15"
         if re.match(r"\d{4}\.\d{1,2}\.\d{1,2}\.$", date_str):
             date_str = date_str.rstrip(".")
 
-        # 1) 상대 날짜: "n시간 전", "n분 전", "n일 전"
+        # 'n시간 전' / 'n분 전' / 'n일 전'
         m_relative = re.match(r'(\d+)(분|시간|일)\s*전', date_str)
         if m_relative:
             amount = int(m_relative.group(1))
@@ -60,8 +58,7 @@ def news():
             elif unit == '일':
                 return (now - timedelta(days=amount)).date()
 
-        # 2) 절대 날짜: "YYYY.MM.DD" or "YYYY.MM.DD."
-        #    예) "2025.04.14" 또는 "2025.04.14."
+        # 'YYYY.MM.DD' 형태
         m_date = re.match(r'^(\d{4})\.(\d{1,2})\.(\d{1,2})$', date_str)
         if m_date:
             y = int(m_date.group(1))
@@ -72,7 +69,7 @@ def news():
             except ValueError:
                 return None
 
-        # 3) 기타 케이스: "어제", "이틀 전", "방금 전" 등이 필요한 경우 추가
+        # 추가 예시: "어제", "이틀 전", "방금 전" 등이 필요한 경우
         if "어제" in date_str:
             return (now - timedelta(days=1)).date()
         if "이틀 전" in date_str:
@@ -82,55 +79,85 @@ def news():
 
         return None
 
+    def get_news_items(soup):
+        """
+        다양한 셀렉터 후보 중 하나라도 맞으면 해당 결과를 반환.
+        """
+        news_items_selectors = [
+            "div.news_wrap.api_ani_send",
+            "ul.list_news > li.bx",
+            "li.bx"
+        ]
+        for sel in news_items_selectors:
+            items = soup.select(sel)
+            if items:
+                return items
+        return []
+
     count = 0
-    # 네이버 모바일 뉴스 검색결과는 start=1,11,21,31,41 등으로 페이지네이션
     for page in range(1, 6):
-        # (page-1)*10+1 → 1, 11, 21, 31, 41
         url = base_url + str((page - 1) * 10 + 1)
+
         try:
             response = requests.get(url, headers=headers, timeout=5)
-            soup = BeautifulSoup(response.text, "html.parser")
+            response.raise_for_status()
         except Exception as e:
             print(f"⛔ 요청 실패: {e}")
             continue
 
-        # 모바일 네이버 뉴스 결과는 보통 div.news_wrap.api_ani_send 안에 기사 정보가 들어 있음
-        news_items = soup.select("div.news_wrap.api_ani_send")
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # 후순위까지 감안해 news_items 추출
+        news_items = get_news_items(soup)
+        if not news_items:
+            # 만약 news_items가 비어 있다면, 실제 HTML에서 기사 정보가 어떻게 되어있는지 확인 필수
+            print("⚠️ news_items가 비어 있음. HTML 구조 변경 가능성 있음.")
+            continue
+
         for item in news_items:
-            # 기사 제목 a 태그
-            a = item.select_one("a.news_tit")
+            # 1) 제목/URL 추출 시도
+            a = item.select_one("a.news_tit") \
+                or item.select_one("a.api_txt_lines") \
+                or item.select_one("a.link_tit") \
+                or item.select_one("a")  # 최후 수단
+
             if not a:
+                # print(item.prettify())  # 디버그: 구조 확인
                 continue
 
-            # 기사 정보 (언론사, 날짜 등) 
-            info_group = item.select_one("div.news_info > div.info_group")
+            # 2) 언론사 / 날짜 정보 찾기
+            #    보통 div.news_info > div.info_group 안에 span.info(press), span.info(날짜) 등이 있음
+            info_group = (
+                item.select_one("div.news_info > div.info_group")
+                or item.select_one("div.info_group")
+            )
             if not info_group:
+                # print(item.prettify())  # 디버그
                 continue
 
-            # 예: 
-            # <span class="info press">언론사</span>
-            # <span class="info">2시간 전</span>
+            # span.info 여러 개 중, 첫 번째는 언론사, 두 번째는 날짜인 경우가 많음
             info_spans = info_group.select("span.info")
             press_str = ""
             raw_date = ""
+
             if len(info_spans) >= 2:
-                # 첫 번째 span.info가 언론사, 두 번째 span.info가 날짜인 케이스
+                # 보통 [언론사, 날짜] 형태
                 press_str = info_spans[0].get_text(strip=True)
                 raw_date = info_spans[1].get_text(strip=True)
             elif len(info_spans) == 1:
-                # 경우에 따라 하나만 있을 수도 있음 (ex. 'n시간 전'만 노출)
-                raw_text = info_spans[0].get_text(strip=True)
-                # 언론사에 '뉴스'나 특정 키워드가 들어있을 수도 있으므로, 
-                # 날짜인지 판별 시도
-                # 간단히 '전' 포함 여부나 yyyy.mm.dd 정규식으로 판별
-                if "전" in raw_text or re.match(r'^\d{4}\.\d{1,2}\.\d{1,2}', raw_text):
-                    raw_date = raw_text
+                # 하나만 있을 수도 있음
+                text_candidate = info_spans[0].get_text(strip=True)
+                # 날짜인지, 언론사인지 구분 필요
+                # 간단하게 '전'이 들어가면 날짜, 아니면 언론사로 가정
+                if "전" in text_candidate or re.match(r'^\d{4}\.\d{1,2}\.', text_candidate):
+                    raw_date = text_candidate
                 else:
-                    press_str = raw_text
+                    press_str = text_candidate
 
-            # 날짜 파싱
+            # 3) 날짜 파싱
             article_date = classify_relative_date(raw_date)
             if article_date and article_date in date_map:
+                # 기사 객체 생성
                 article = {
                     "title": a.get_text(strip=True),
                     "url": a["href"],
@@ -146,7 +173,7 @@ def news():
         if count >= 100:
             break
 
-    # 날짜 내림차순 정렬
+    # 날짜 기준 내림차순(최신이 위로 오도록)
     result = {
         dt.strftime("%Y년 %m월 %d일"): date_map.get(dt, [])
         for dt in sorted(date_map.keys(), reverse=True)
