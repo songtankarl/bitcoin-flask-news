@@ -56,7 +56,7 @@ def news():
             for span in item.select("span.info"):
                 text = span.get_text(strip=True)
                 if "전" in text or "." in text:
-                date_tag = text
+                    date_tag = text
                     break
 
         if not a or not date_tag:
