@@ -1,11 +1,40 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>실시간 업데이트</title>
+  <meta charset="UTF-8" />
+  <title>비트코인 뉴스</title>
 </head>
 <body>
-  <h1>Flask API Endpoint</h1>
-  <p>이 페이지는 <code>/api/news</code>에서 JSON으로 뉴스 데이터를 제공합니다.</p>
+  <h1>비트코인 뉴스 업데이트</h1>
+  <div id="news-container">뉴스를 불러오는 중...</div>
+
+  <script>
+    fetch("/api/news")
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById("news-container");
+        container.innerHTML = "";
+        for (let date in data) {
+          const dateHeader = document.createElement("h2");
+          dateHeader.textContent = date;
+          container.appendChild(dateHeader);
+
+          const ul = document.createElement("ul");
+          data[date].forEach(article => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="${article.url}" target="_blank">${article.title}</a>`;
+            ul.appendChild(li);
+          });
+
+          if (data[date].length === 0) {
+            const noItem = document.createElement("p");
+            noItem.textContent = "해당 날짜의 기사가 없습니다.";
+            container.appendChild(noItem);
+          }
+
+          container.appendChild(ul);
+        }
+      });
+  </script>
 </body>
 </html>

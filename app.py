@@ -32,7 +32,6 @@ def news():
         d = date_str.strip()
         try:
             article_date = None
-
             if "일 전" in d:
                 days = int(d.replace("일 전", "").strip())
                 article_date = (now - timedelta(days=days)).date()
@@ -59,13 +58,7 @@ def news():
         url = base_url + str((page - 1) * 10 + 1)
         try:
             response = requests.get(url, headers=headers, timeout=5)
-            print("🔍 네이버 응답 결과 (일부):")
-            print(response.text[:1000])  # 첫 1000글자만 출력
-            print("📄 네이버 응답 미리보기:")
-            print(response.text[:1000])  # 앞 1000자만 출력해서 구조 확인
             soup = BeautifulSoup(response.text, "html.parser")
-            print("🧩 뉴스 박스 수:", len(soup.select("div.news_area")))
-            print("🧩 뉴스 박스 개수:", len(soup.select("div.news_area")))
         except Exception as e:
             print(f"⛔ 요청 실패: {e}")
             continue
@@ -73,25 +66,17 @@ def news():
         for a in soup.select("a.news_tit"):
             title = a.get_text(strip=True)
             link = a["href"]
-
             article = {
                 "title": title,
                 "url": link,
                 "press": "N/A",
-                "date": now.strftime("%Y.%m.%d")  # 임시 날짜
-                        }
-
-            # 오늘 날짜에 강제로 넣기 (정상 작동 확인용)
-            date_map[today].append(article)
-            count += 1
-        if count >= 30:
-            break
-        
+                "date": now.strftime("%Y.%m.%d")
+            }
             classify(article["date"], article)
             count += 1
-            if count >= 100:
+            if count >= 30:
                 break
-        if count >= 100:
+        if count >= 30:
             break
 
     result = {dt.strftime("%Y년 %m월 %d일"): date_map.get(dt, []) for dt in sorted(date_map.keys(), reverse=True)}
