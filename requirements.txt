@@ -1,6 +1,6 @@
 Flask
 flask-cors
 flask-caching
-beautifulsoup4
 requests
+beautifulsoup4
 pytz

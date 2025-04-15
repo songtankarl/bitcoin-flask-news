@@ -1,40 +1,34 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>비트코인 뉴스</title>
+    <meta charset="UTF-8">
+    <title>비트코인 뉴스</title>
 </head>
 <body>
-  <h1>비트코인 뉴스 업데이트</h1>
-  <div id="news-container">뉴스를 불러오는 중...</div>
-
-  <script>
-    fetch("/api/news")
-      .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById("news-container");
-        container.innerHTML = "";
-        for (let date in data) {
-          const dateHeader = document.createElement("h2");
-          dateHeader.textContent = date;
-          container.appendChild(dateHeader);
-
-          const ul = document.createElement("ul");
-          data[date].forEach(article => {
-            const li = document.createElement("li");
-            li.innerHTML = `<a href="${article.url}" target="_blank">${article.title}</a>`;
-            ul.appendChild(li);
-          });
-
-          if (data[date].length === 0) {
-            const noItem = document.createElement("p");
-            noItem.textContent = "해당 날짜의 기사가 없습니다.";
-            container.appendChild(noItem);
-          }
-
-          container.appendChild(ul);
-        }
-      });
-  </script>
+    <h1>비트코인 뉴스 불러오기</h1>
+    <div id="news"></div>
+    <script>
+        fetch("/api/news")
+            .then(res => res.json())
+            .then(data => {
+                const newsDiv = document.getElementById("news");
+                for (let date in data) {
+                    const section = document.createElement("section");
+                    section.innerHTML = `<h2>${date}</h2>`;
+                    if (data[date].length === 0) {
+                        section.innerHTML += "<p>해당 날짜의 기사가 없습니다.</p>";
+                    } else {
+                        const list = document.createElement("ul");
+                        data[date].forEach(article => {
+                            const item = document.createElement("li");
+                            item.innerHTML = `<a href="${article.url}" target="_blank">${article.title}</a>`;
+                            list.appendChild(item);
+                        });
+                        section.appendChild(list);
+                    }
+                    newsDiv.appendChild(section);
+                }
+            });
+    </script>
 </body>
 </html>
