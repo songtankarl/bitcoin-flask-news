@@ -4,6 +4,7 @@ from flask_caching import Cache
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
+from pytz import timezone
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -19,10 +20,12 @@ def news():
     headers = {"User-Agent": "Mozilla/5.0"}
     base_url = "https://search.naver.com/search.naver?where=news&query=비트코인&start="
 
-    now = datetime.now()
+    now = datetime.now(timezone('Asia/Seoul'))
+    today = now.date()
+    
     date_map = {}
     for i in range(4):
-        date_key = (now - timedelta(days=i)).date()
+    date_key = today - timedelta(days=i)
         date_map[date_key] = []
 
     def classify(date_str, article):
