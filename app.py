@@ -5,7 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta, date
 from pytz import timezone
-import re  # 추가
+import re
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -19,38 +19,40 @@ def home():
 @app.route("/api/news")
 def news():
     headers = {
-        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) "
-                      "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1"
+        "User-Agent": (
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) "
+            "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1"
+        )
     }
     base_url = "https://m.search.naver.com/search.naver?where=m_news&query=비트코인&start="
 
+    # 현재(한국 시간) 날짜 구하기
     now = datetime.now(timezone('Asia/Seoul'))
     today = now.date()
-    
-    # 최근 4일의 날짜별로 딕셔너리 초기화
+
+    # 최근 4일 치를 저장할 딕셔너리
     date_map = {}
     for i in range(4):
         date_key = today - timedelta(days=i)
         date_map[date_key] = []
 
-    def classify_relative_date(date_str):
+    def classify_relative_date(date_str: str):
         """
-        '방금 전', 'n분 전', 'n시간 전', 'n일 전', 'YYYY.MM.DD' 등 다양한 형태의 
-        날짜 문자열을 파싱해서 date(YYYY, MM, DD)를 반환하는 함수.
-        파싱 실패 시 None 반환
+        'n시간 전', 'n분 전', 'n일 전', 'YYYY.MM.DD.', 'YYYY.MM.DD' 형태 등을
+        제대로 파싱하여 date 객체(년-월-일)로 반환. 파싱 실패 시 None.
         """
-        # 기본 전처리
+
         date_str = date_str.strip()
-        # '·' 기호 제거 (네이버 모바일 환경에서 가끔 섞여 나오므로)
-        date_str = date_str.replace("·", "")
-        
-        # 1) 'n시간 전', 'n분 전', 'n일 전' 형태 처리
-        #    예: "5시간 전", "10분 전", "2일 전" 등
+        # 혹시 "2025.04.15." 처럼 끝에 점이 붙어있으면 제거
+        # (단, 'n시간 전' 같은 표현까지 잘라내면 안 되므로 주의)
+        if re.match(r"\d{4}\.\d{1,2}\.\d{1,2}\.$", date_str):
+            date_str = date_str.rstrip(".")
+
+        # 1) 상대 날짜: "n시간 전", "n분 전", "n일 전"
         m_relative = re.match(r'(\d+)(분|시간|일)\s*전', date_str)
         if m_relative:
             amount = int(m_relative.group(1))
             unit = m_relative.group(2)
-
             if unit == '분':
                 return (now - timedelta(minutes=amount)).date()
             elif unit == '시간':
@@ -58,39 +60,32 @@ def news():
             elif unit == '일':
                 return (now - timedelta(days=amount)).date()
 
-        # 2) 'YYYY.MM.DD' 혹은 'YYYY.MM.DD.' 형태
-        #    가끔 뒤에 시간이 붙어서 "YYYY.MM.DD. HH:MM" 로 나오기도 함
-        #    예: "2025.04.12", "2025.04.12.", "2025.04.12. 15:30"
-        m_date = re.match(r'(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})', date_str)
+        # 2) 절대 날짜: "YYYY.MM.DD" or "YYYY.MM.DD."
+        #    예) "2025.04.14" 또는 "2025.04.14."
+        m_date = re.match(r'^(\d{4})\.(\d{1,2})\.(\d{1,2})$', date_str)
         if m_date:
             y = int(m_date.group(1))
             m = int(m_date.group(2))
             d = int(m_date.group(3))
-
-            # 혹시 뒤에 시간이 붙어 있다면, 추가로 HH:MM 형식을 파싱할 수도 있음
-            # 여기서는 일단 date까지만 파싱
             try:
                 return date(y, m, d)
             except ValueError:
-                # 예외 발생 시 None
                 return None
 
-        # 3) 그 외 "어제", "이틀 전", "방금 전" 같은 경우를 추가로 처리하고 싶다면:
+        # 3) 기타 케이스: "어제", "이틀 전", "방금 전" 등이 필요한 경우 추가
         if "어제" in date_str:
-            # "어제 14:20"처럼 구체적인 시간이 있을 수도 있으니 여기서 더 파싱해도 됨
             return (now - timedelta(days=1)).date()
-
         if "이틀 전" in date_str:
             return (now - timedelta(days=2)).date()
-
         if "방금 전" in date_str:
             return now.date()
 
-        # 여기까지 왔는데도 파싱이 안 되면 None 리턴
         return None
 
     count = 0
+    # 네이버 모바일 뉴스 검색결과는 start=1,11,21,31,41 등으로 페이지네이션
     for page in range(1, 6):
+        # (page-1)*10+1 → 1, 11, 21, 31, 41
         url = base_url + str((page - 1) * 10 + 1)
         try:
             response = requests.get(url, headers=headers, timeout=5)
@@ -99,22 +94,47 @@ def news():
             print(f"⛔ 요청 실패: {e}")
             continue
 
-        for item in soup.select("li"):
+        # 모바일 네이버 뉴스 결과는 보통 div.news_wrap.api_ani_send 안에 기사 정보가 들어 있음
+        news_items = soup.select("div.news_wrap.api_ani_send")
+        for item in news_items:
+            # 기사 제목 a 태그
             a = item.select_one("a.news_tit")
-            date_info = item.select_one("div.news_info") or item.select_one("span.sub_txt")
-            if not a or not date_info:
+            if not a:
                 continue
 
-            meta_text = date_info.get_text(" ", strip=True)
-            # "언론사 · n시간 전" 처럼 뒤쪽에 날짜/시간 정보가 나오는 경우가 많으므로
-            raw_date = meta_text.split("·")[-1].strip()
+            # 기사 정보 (언론사, 날짜 등) 
+            info_group = item.select_one("div.news_info > div.info_group")
+            if not info_group:
+                continue
 
+            # 예: 
+            # <span class="info press">언론사</span>
+            # <span class="info">2시간 전</span>
+            info_spans = info_group.select("span.info")
+            press_str = ""
+            raw_date = ""
+            if len(info_spans) >= 2:
+                # 첫 번째 span.info가 언론사, 두 번째 span.info가 날짜인 케이스
+                press_str = info_spans[0].get_text(strip=True)
+                raw_date = info_spans[1].get_text(strip=True)
+            elif len(info_spans) == 1:
+                # 경우에 따라 하나만 있을 수도 있음 (ex. 'n시간 전'만 노출)
+                raw_text = info_spans[0].get_text(strip=True)
+                # 언론사에 '뉴스'나 특정 키워드가 들어있을 수도 있으므로, 
+                # 날짜인지 판별 시도
+                # 간단히 '전' 포함 여부나 yyyy.mm.dd 정규식으로 판별
+                if "전" in raw_text or re.match(r'^\d{4}\.\d{1,2}\.\d{1,2}', raw_text):
+                    raw_date = raw_text
+                else:
+                    press_str = raw_text
+
+            # 날짜 파싱
             article_date = classify_relative_date(raw_date)
             if article_date and article_date in date_map:
                 article = {
                     "title": a.get_text(strip=True),
                     "url": a["href"],
-                    "press": meta_text.split("·")[0].strip(),
+                    "press": press_str,
                     "date": raw_date
                 }
                 date_map[article_date].append(article)
@@ -122,13 +142,16 @@ def news():
 
             if count >= 100:
                 break
+
         if count >= 100:
             break
 
+    # 날짜 내림차순 정렬
     result = {
-        dt.strftime("%Y년 %m월 %d일"): date_map.get(dt, []) 
+        dt.strftime("%Y년 %m월 %d일"): date_map.get(dt, [])
         for dt in sorted(date_map.keys(), reverse=True)
     }
+
     return jsonify(result)
 
 if __name__ == "__main__":
