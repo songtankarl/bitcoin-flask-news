@@ -61,8 +61,11 @@ def news():
             response = requests.get(url, headers=headers, timeout=5)
             print("🔍 네이버 응답 결과 (일부):")
             print(response.text[:1000])  # 첫 1000글자만 출력
+            print("📄 네이버 응답 미리보기:")
+            print(response.text[:1000])  # 앞 1000자만 출력해서 구조 확인
             soup = BeautifulSoup(response.text, "html.parser")
             print("🧩 뉴스 박스 수:", len(soup.select("div.news_area")))
+            print("🧩 뉴스 박스 개수:", len(soup.select("div.news_area")))
         except Exception as e:
             print(f"⛔ 요청 실패: {e}")
             continue
