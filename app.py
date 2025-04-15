@@ -33,14 +33,14 @@ def news():
     def classify_relative_date(date_str):
         date_str = date_str.strip().replace(" ", "").replace("·", "")
         try:
-            if "시간전" in date_str:
-                hours = int(date_str.replace("시간전", ""))
+            if "시간 전" in date_str:
+                hours = int(date_str.replace("시간 전", ""))
                 return (now - timedelta(hours=hours)).date()
-            elif "분전" in date_str:
-                minutes = int(date_str.replace("분전", ""))
+            elif "분 전" in date_str:
+                minutes = int(date_str.replace("분 전", ""))
                 return (now - timedelta(minutes=minutes)).date()
-            elif "일전" in date_str:
-                days = int(date_str.replace("일전", ""))
+            elif "일 전" in date_str:
+                days = int(date_str.replace("일 전", ""))
                 return (now - timedelta(days=days)).date()
             elif "." in date_str:
                 return datetime.strptime(date_str, "%Y.%m.%d").date()
