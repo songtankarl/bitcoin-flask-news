@@ -25,7 +25,7 @@ def news():
     
     date_map = {}
     for i in range(4):
-    date_key = today - timedelta(days=i)
+        date_key = today - timedelta(days=i)
         date_map[date_key] = []
 
     def classify(date_str, article):
