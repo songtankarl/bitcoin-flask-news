@@ -59,7 +59,7 @@ def news():
                     date_tag = text
                     break
 
-        if not a or not date_tag:
+           if not a or not date_tag:
                 continue
 
             article = {
