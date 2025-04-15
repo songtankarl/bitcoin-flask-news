@@ -65,13 +65,18 @@ def news():
             date_tag = None
             for span in item.select("span.info"):
                 text = span.get_text(strip=True)
-                if "2025." in text or "2024." in text or "일 전" in text:
+                print("🔎 날짜 필터링 후보:", text)
+                if any(x in text for x in ["2025.", "2024.", "일 전", "분 전", "시간 전"]):
                     date_tag = text
                     break
 
             if not a or not date_tag:
+                print("⚠️ 기사 or 날짜 없음")
                 continue
 
+            print("✅ 기사:", a.get_text(strip=True))
+            print("📅 날짜:", date_tag)
+            
             article = {
                 "title": a.get_text(strip=True),
                 "url": a["href"],
