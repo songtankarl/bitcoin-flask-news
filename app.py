@@ -85,7 +85,7 @@ def news():
             date_map[today].append(article)
             count += 1
         if count >= 30:
-        break
+            break
         
             classify(article["date"], article)
             count += 1
